@@ -74,9 +74,7 @@ function AudioRecorder({ onAudioSubmit }) {
 
   return (
     <div className="mb-6">
-      <h3 className="text-lg font-bold text-gray-700 mb-4">
-        Record or Upload Audio
-      </h3>
+      <h3 className="text-lg font-bold text-gray-700 mb-4">Record audio</h3>
 
       {/* Recording Controls */}
       <div>
