@@ -1,24 +1,26 @@
 import React, { useState } from "react";
+import WavEncoder from "wav-encoder";
 
 function AudioRecorder({ onAudioSubmit }) {
-  const [audioFile, setAudioFile] = useState(null);
-  const [isRecording, setIsRecording] = useState(false);
-  const [mediaRecorder, setMediaRecorder] = useState(null);
   const [audioBlob, setAudioBlob] = useState(null);
   const [audioURL, setAudioURL] = useState("");
+  const [isRecording, setIsRecording] = useState(false);
+  const [mediaRecorder, setMediaRecorder] = useState(null);
+  const [isConverting, setIsConverting] = useState(false);
 
   // Start recording audio
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const recorder = new MediaRecorder(stream);
-      recorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          const blob = new Blob([event.data], { type: "audio/webm" });
-          setAudioBlob(blob);
-          setAudioURL(URL.createObjectURL(blob));
-        }
+
+      recorder.ondataavailable = async (event) => {
+        const recordedBlob = event.data;
+        const wavBlob = await convertWebmToWav(recordedBlob); // Convert to WAV
+        setAudioBlob(wavBlob);
+        setAudioURL(URL.createObjectURL(wavBlob)); // Generate preview URL
       };
+
       recorder.start();
       setMediaRecorder(recorder);
       setIsRecording(true);
@@ -38,52 +40,46 @@ function AudioRecorder({ onAudioSubmit }) {
     }
   };
 
-  // Handle submission of the recorded or uploaded audio
+  // Convert `audio/webm` Blob to `audio/wav` Blob
+  const convertWebmToWav = async (webmBlob) => {
+    setIsConverting(true);
+
+    const audioContext = new AudioContext();
+    const arrayBuffer = await webmBlob.arrayBuffer();
+
+    // Decode the audio data from the webm blob
+    const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+
+    // Encode the audio buffer to WAV using wav-encoder
+    const wavData = await WavEncoder.encode({
+      sampleRate: audioBuffer.sampleRate,
+      channelData: [audioBuffer.getChannelData(0)], // Mono audio
+    });
+
+    // Create a new Blob for the WAV file
+    const wavBlob = new Blob([wavData], { type: "audio/wav" });
+
+    setIsConverting(false);
+    return wavBlob;
+  };
+
+  // Handle submission of the audio file (recorded or uploaded)
   const handleSubmit = () => {
     if (audioBlob) {
       onAudioSubmit(audioBlob);
-    } else if (audioFile) {
-      onAudioSubmit(audioFile);
     } else {
-      alert("Please upload or record an audio file.");
+      alert("Please record or upload a valid .wav file.");
     }
-  };
-
-  const handleFileUpload = (event) => {
-    setAudioFile(event.target.files[0]);
-    setAudioBlob(null); // Reset recorded audio if a file is uploaded
-    setAudioURL("");
   };
 
   return (
     <div className="mb-6">
       <h3 className="text-lg font-bold text-gray-700 mb-4">
-        Upload or Record Audio
+        Record or Upload Audio
       </h3>
 
-      {/* File Upload Option */}
-      <label
-        className="block text-gray-700 font-bold mb-2"
-        htmlFor="file-upload"
-      >
-        Upload Audio File
-      </label>
-      <input
-        id="file-upload"
-        type="file"
-        accept="audio/*"
-        onChange={handleFileUpload}
-        className="w-full border border-gray-300 rounded-lg p-2 mb-4"
-      />
-      {audioFile && (
-        <p className="text-gray-500">
-          Selected File: <span className="font-semibold">{audioFile.name}</span>
-        </p>
-      )}
-
       {/* Recording Controls */}
-      <div className="mt-6">
-        <p className="text-gray-700 font-bold mb-2">Or Record Audio:</p>
+      <div>
         <button
           onClick={isRecording ? stopRecording : startRecording}
           className={`py-2 px-4 rounded-lg shadow ${
@@ -91,17 +87,25 @@ function AudioRecorder({ onAudioSubmit }) {
               ? "bg-red-500 hover:bg-red-600"
               : "bg-blue-500 hover:bg-blue-600"
           } text-white`}
+          disabled={isConverting}
         >
           {isRecording ? "Stop Recording" : "Start Recording"}
         </button>
-        {audioURL && (
-          <div className="mt-4">
-            <audio controls src={audioURL} className="w-full">
-              Your browser does not support the audio element.
-            </audio>
-          </div>
-        )}
       </div>
+
+      {/* Conversion Status */}
+      {isConverting && (
+        <p className="text-gray-500 mt-2">Converting to WAV...</p>
+      )}
+
+      {/* Audio Preview */}
+      {audioURL && (
+        <div className="mt-4">
+          <audio controls src={audioURL} className="w-full">
+            Your browser does not support the audio element.
+          </audio>
+        </div>
+      )}
 
       {/* Submit Button */}
       <button

@@ -1,5 +1,19 @@
 import React from "react";
 
+// Map human-readable names to Sarvam API language codes
+const LANGUAGE_MAP = {
+  Telugu: "te-IN",
+  Hindi: "hi-IN",
+  Bengali: "bn-IN",
+  Kannada: "kn-IN",
+  Malayalam: "ml-IN",
+  Marathi: "mr-IN",
+  Odia: "od-IN",
+  Punjabi: "pa-IN",
+  Tamil: "ta-IN",
+  Gujarati: "gu-IN",
+};
+
 function LanguageSelector({
   sourceLang,
   targetLang,
@@ -16,14 +30,19 @@ function LanguageSelector({
       </label>
       <select
         id="source-language"
-        value={sourceLang}
-        onChange={(e) => setSourceLang(e.target.value)}
+        value={
+          Object.keys(LANGUAGE_MAP).find(
+            (key) => LANGUAGE_MAP[key] === sourceLang
+          ) || "Telugu"
+        }
+        onChange={(e) => setSourceLang(LANGUAGE_MAP[e.target.value])}
         className="w-full border border-gray-300 rounded-lg p-2 mb-4"
       >
-        <option value="telugu">Telugu</option>
-        <option value="hindi">Hindi</option>
-        <option value="tamil">Tamil</option>
-        <option value="kannada">Kannada</option>
+        {Object.keys(LANGUAGE_MAP).map((lang) => (
+          <option key={lang} value={lang}>
+            {lang}
+          </option>
+        ))}
       </select>
 
       <label
@@ -34,14 +53,19 @@ function LanguageSelector({
       </label>
       <select
         id="target-language"
-        value={targetLang}
-        onChange={(e) => setTargetLang(e.target.value)}
+        value={
+          Object.keys(LANGUAGE_MAP).find(
+            (key) => LANGUAGE_MAP[key] === targetLang
+          ) || "Hindi"
+        }
+        onChange={(e) => setTargetLang(LANGUAGE_MAP[e.target.value])}
         className="w-full border border-gray-300 rounded-lg p-2"
       >
-        <option value="telugu">Telugu</option>
-        <option value="hindi">Hindi</option>
-        <option value="tamil">Tamil</option>
-        <option value="kannada">Kannada</option>
+        {Object.keys(LANGUAGE_MAP).map((lang) => (
+          <option key={lang} value={lang}>
+            {lang}
+          </option>
+        ))}
       </select>
     </div>
   );

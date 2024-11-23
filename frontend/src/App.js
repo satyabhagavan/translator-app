@@ -5,8 +5,9 @@ import ResultDisplay from "./components/ResultDisplay";
 import axios from "axios";
 
 function App() {
-  const [sourceLang, setSourceLang] = useState("telugu");
-  const [targetLang, setTargetLang] = useState("hindi");
+  // Use Sarvam API language codes for initial state
+  const [sourceLang, setSourceLang] = useState("te-IN"); // Telugu
+  const [targetLang, setTargetLang] = useState("hi-IN"); // Hindi
   const [originalText, setOriginalText] = useState("");
   const [translatedText, setTranslatedText] = useState("");
   const [translatedAudio, setTranslatedAudio] = useState(null);
@@ -16,6 +17,8 @@ function App() {
     formData.append("file", audioFile);
     formData.append("sourceLang", sourceLang);
     formData.append("targetLang", targetLang);
+    console.log("Source Language:", sourceLang);
+    console.log("Target Language:", targetLang);
 
     try {
       const response = await axios.post(
